@@ -3,27 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polymarket Trading Dashboard - Enhanced</title>
+    <title>Polymarket Trading Dashboard - Floyd Hodges</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
+            min-height: 100vh;
         }
-        
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-        
+        .container { max-width: 1600px; margin: 0 auto; }
         h1 {
             color: white;
             text-align: center;
@@ -31,14 +22,12 @@
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-        
         .stat-card {
             background: white;
             border-radius: 15px;
@@ -46,11 +35,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transition: transform 0.3s;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
+        .stat-card:hover { transform: translateY(-5px); }
         .stat-label {
             color: #666;
             font-size: 0.9em;
@@ -58,54 +43,39 @@
             letter-spacing: 1px;
             margin-bottom: 10px;
         }
-        
         .stat-value {
             font-size: 2.5em;
             font-weight: bold;
             color: #333;
         }
-        
-        .stat-value.positive {
-            color: #10b981;
-        }
-        
-        .stat-value.negative {
-            color: #ef4444;
-        }
-        
+        .stat-value.positive { color: #10b981; }
+        .stat-value.negative { color: #ef4444; }
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
             gap: 30px;
             margin-bottom: 30px;
         }
-        
         .chart-container {
             background: white;
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        
         .chart-container h2 {
             margin-bottom: 20px;
             color: #333;
             font-size: 1.5em;
         }
-        
-        .positions-table {
+        table {
+            width: 100%;
             background: white;
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow-x: auto;
-        }
-        
-        table {
-            width: 100%;
             border-collapse: collapse;
+            margin-bottom: 30px;
         }
-        
         th {
             background: #667eea;
             color: white;
@@ -113,16 +83,11 @@
             text-align: left;
             font-weight: 600;
         }
-        
         td {
             padding: 15px;
             border-bottom: 1px solid #e5e7eb;
         }
-        
-        tr:hover {
-            background: #f9fafb;
-        }
-        
+        tr:hover { background: #f9fafb; }
         .badge {
             display: inline-block;
             padding: 5px 12px;
@@ -130,380 +95,191 @@
             font-size: 0.85em;
             font-weight: 600;
         }
-        
         .badge.profit {
             background: #d1fae5;
             color: #065f46;
         }
-        
         .badge.loss {
             background: #fee2e2;
             color: #991b1b;
         }
-        
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transition: all 0.3s;
-            z-index: 1000;
-        }
-        
-        .refresh-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.5em;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📊 Polymarket Trading Dashboard</h1>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Account Value</div>
-                <div class="stat-value">$69.70</div>
+        <div id="loading" class="loading">Loading data...</div>
+        <div id="dashboard" style="display: none;">
+            <div class="stats-grid" id="statsGrid"></div>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h2>💰 Cumulative P&L</h2>
+                    <canvas id="pnlChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h2>📈 ROI Over Time</h2>
+                    <canvas id="roiChart"></canvas>
+                </div>
             </div>
-            
-            <div class="stat-card">
-                <div class="stat-label">Total P&L</div>
-                <div class="stat-value positive">+$6.48</div>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h2>📊 Account Value</h2>
+                    <canvas id="accountChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h2>🎯 Win Rate Trend</h2>
+                    <canvas id="winRateChart"></canvas>
+                </div>
             </div>
-            
-            <div class="stat-card">
-                <div class="stat-label">ROI</div>
-                <div class="stat-value positive">+50.2%</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-label">Trades Today</div>
-                <div class="stat-value">4</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-label">Win Rate</div>
-                <div class="stat-value">75%</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-label">Liquid Balance</div>
-                <div class="stat-value">$47.29</div>
-            </div>
-        </div>
-        
-        <div class="charts-grid">
             <div class="chart-container">
-                <h2>💰 P&L Over Time ($)</h2>
-                <canvas id="pnlChart"></canvas>
+                <h2>Active Positions</h2>
+                <table id="positionsTable"></table>
             </div>
-            
-            <div class="chart-container">
-                <h2>📈 ROI Percentage by Date</h2>
-                <canvas id="roiChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="charts-grid">
-            <div class="chart-container">
-                <h2>📊 Account Value Growth</h2>
-                <canvas id="accountChart"></canvas>
-            </div>
-            
-            <div class="chart-container">
-                <h2>🎯 Win Rate Trend</h2>
-                <canvas id="winRateChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="charts-grid">
-            <div class="chart-container">
-                <h2>💵 Daily Trading Volume</h2>
-                <canvas id="volumeChart"></canvas>
-            </div>
-            
-            <div class="chart-container">
-                <h2>📉 Position Performance</h2>
-                <canvas id="positionChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="positions-table">
-            <h2>Active Positions</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Market</th>
-                        <th>Side</th>
-                        <th>Shares</th>
-                        <th>Entry</th>
-                        <th>Current</th>
-                        <th>P&L</th>
-                        <th>ROI</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Clippers vs Timberwolves</td>
-                        <td>Clippers</td>
-                        <td>16.56</td>
-                        <td>$0.245</td>
-                        <td>$0.636</td>
-                        <td><span class="badge profit">+$6.48</span></td>
-                        <td><span class="badge profit">+64.8%</span></td>
-                    </tr>
-                    <tr>
-                        <td>Olivia #1 Girl Name 2025</td>
-                        <td>NO</td>
-                        <td>21.74</td>
-                        <td>$0.132</td>
-                        <td>$0.276</td>
-                        <td><span class="badge profit">+$3.12</span></td>
-                        <td><span class="badge profit">+108.7%</span></td>
-                    </tr>
-                    <tr>
-                        <td>Kevin Warsh Fed Chair</td>
-                        <td>NO</td>
-                        <td>8.62</td>
-                        <td>$0.348</td>
-                        <td>$0.334</td>
-                        <td><span class="badge loss">-$0.12</span></td>
-                        <td><span class="badge loss">-4.0%</span></td>
-                    </tr>
-                    <tr>
-                        <td>PUMP Top Performer Week</td>
-                        <td>YES</td>
-                        <td>10.71</td>
-                        <td>$0.280</td>
-                        <td>$0.280</td>
-                        <td><span class="badge">$0.00</span></td>
-                        <td><span class="badge">0.0%</span></td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </div>
-    
-    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh Data</button>
-    
+
     <script>
-        // Chart configurations
-        const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
-            }
-        };
-        
-        // Sample data - replace with real data from API
-        const dates = ['Feb 5', 'Feb 6', 'Feb 7', 'Feb 8', 'Feb 9'];
-        const pnlData = [0, 1.50, 2.80, 4.20, 6.48];
-        const roiData = [0, 11.6, 21.7, 32.5, 50.2];
-        const accountValue = [63.22, 64.72, 66.02, 67.42, 69.70];
-        const winRate = [0, 50, 66.7, 75, 75];
-        const volume = [0, 5, 8, 12, 15];
-        
-        // 1. P&L Chart
-        const pnlCtx = document.getElementById('pnlChart').getContext('2d');
-        new Chart(pnlCtx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'Cumulative P&L ($)',
-                    data: pnlData,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    borderWidth: 3
-                }]
-            },
-            options: {
-                ...chartOptions,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toFixed(2);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // 2. ROI Percentage Chart
-        const roiCtx = document.getElementById('roiChart').getContext('2d');
-        new Chart(roiCtx, {
-            type: 'bar',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'ROI (%)',
-                    data: roiData,
-                    backgroundColor: roiData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
-                    borderColor: roiData.map(v => v >= 0 ? '#10b981' : '#ef4444'),
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                ...chartOptions,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // 3. Account Value Growth
-        const accountCtx = document.getElementById('accountChart').getContext('2d');
-        new Chart(accountCtx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'Account Value ($)',
-                    data: accountValue,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    borderWidth: 3
-                }]
-            },
-            options: {
-                ...chartOptions,
-                scales: {
-                    y: {
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toFixed(2);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // 4. Win Rate Trend
-        const winRateCtx = document.getElementById('winRateChart').getContext('2d');
-        new Chart(winRateCtx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'Win Rate (%)',
-                    data: winRate,
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    borderWidth: 3
-                }]
-            },
-            options: {
-                ...chartOptions,
-                scales: {
-                    y: {
-                        min: 0,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // 5. Daily Trading Volume
-        const volumeCtx = document.getElementById('volumeChart').getContext('2d');
-        new Chart(volumeCtx, {
-            type: 'bar',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'Volume ($)',
-                    data: volume,
-                    backgroundColor: 'rgba(139, 92, 246, 0.8)',
-                    borderColor: '#8b5cf6',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                ...chartOptions,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        // 6. Position Performance (Horizontal Bar)
-        const positionCtx = document.getElementById('positionChart').getContext('2d');
-        new Chart(positionCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Clippers', 'Olivia', 'Warsh', 'PUMP'],
-                datasets: [{
-                    label: 'ROI (%)',
-                    data: [64.8, 108.7, -4.0, 0],
-                    backgroundColor: [
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(239, 68, 68, 0.8)',
-                        'rgba(156, 163, 175, 0.8)'
-                    ],
-                    borderColor: [
-                        '#10b981',
-                        '#10b981',
-                        '#ef4444',
-                        '#9ca3af'
-                    ],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                ...chartOptions,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        // Load data from data.json
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                
+                // Render stats
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Current Balance</div>
+                        <div class="stat-value">$${data.summary.currentBalance.toFixed(2)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total P&L</div>
+                        <div class="stat-value positive">+$${data.summary.totalProfit.toFixed(2)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">ROI</div>
+                        <div class="stat-value positive">+${data.summary.roi.toFixed(1)}%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Trades</div>
+                        <div class="stat-value">${data.summary.totalTrades}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-value">${data.summary.winRate.toFixed(1)}%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Value</div>
+                        <div class="stat-value">$${data.summary.totalValue.toFixed(2)}</div>
+                    </div>
+                `;
+                
+                // Chart options
+                const chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: true, position: 'top' } }
+                };
+                
+                // P&L Chart
+                new Chart(document.getElementById('pnlChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.chartData.dates,
+                        datasets: [{
+                            label: 'Cumulative P&L ($)',
+                            data: data.chartData.cumulativeProfit,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: chartOptions
+                });
+                
+                // ROI Chart
+                new Chart(document.getElementById('roiChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.chartData.dates,
+                        datasets: [{
+                            label: 'ROI (%)',
+                            data: data.chartData.dailyROI,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: chartOptions
+                });
+                
+                // Account Value Chart
+                new Chart(document.getElementById('accountChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.chartData.dates,
+                        datasets: [{
+                            label: 'Account Value ($)',
+                            data: data.chartData.accountValue,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: chartOptions
+                });
+                
+                // Win Rate Chart
+                new Chart(document.getElementById('winRateChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.chartData.dates,
+                        datasets: [{
+                            label: 'Win Rate (%)',
+                            data: data.chartData.winRate,
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: { ...chartOptions, scales: { y: { min: 0, max: 100 } } }
+                });
+                
+                // Positions Table
+                const table = document.getElementById('positionsTable');
+                let rows = '<thead><tr><th>Market</th><th>Size</th><th>Entry</th><th>Current</th><th>P&L</th><th>ROI</th><th>Status</th></tr></thead><tbody>';
+                data.positions.forEach(pos => {
+                    rows += `<tr>
+                        <td>${pos.market}</td>
+                        <td>$${pos.size.toFixed(2)}</td>
+                        <td>$${pos.entryPrice.toFixed(2)}</td>
+                        <td>$${pos.currentPrice.toFixed(2)}</td>
+                        <td><span class="badge ${pos.profit > 0 ? 'profit' : 'loss'}">$${pos.profit.toFixed(2)}</span></td>
+                        <td><span class="badge ${pos.profit > 0 ? 'profit' : 'loss'}">${pos.profitPercent.toFixed(1)}%</span></td>
+                        <td>${pos.status}</td>
+                    </tr>`;
+                });
+                rows += '</tbody>';
+                table.innerHTML = rows;
+            })
+            .catch(error => {
+                document.getElementById('loading').innerHTML = 'Error loading data: ' + error;
+            });
     </script>
 </body>
 </html>
